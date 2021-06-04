@@ -36,9 +36,9 @@ const userSchema = mongoose.Schema(
         passwordConfirm: {
             type: String,
             required: [true, 'Please confirm your password!'],
-            validate: {
-                //this is only executed for create and save
-            },
+            // validate: {
+            //     //this is only executed for create and save
+            // },
         },
 
         role: {
@@ -51,5 +51,5 @@ const userSchema = mongoose.Schema(
     { timestamps: true }
 );
 
-const User = mongoose.Schema('User', userSchema);
+const User = mongoose.model('User', userSchema);
 module.exports = User;
