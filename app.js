@@ -1,15 +1,18 @@
 const express = require('express');
-const bodyparser = require('body-parser');
+const morgan = require('morgan');
 
 const app = express();
 
 //* IMPORTING ENVIRONMENT VARIABLES
 require('dotenv/config');
 
-port = process.env.PORT;
+const port = process.env.PORT;
 
 //? MIDDLEWARE
-app.use(bodyparser.json());
+//* HTTP  request logger
+app.use(morgan('dev'));
+
+app.use(express.json());
 
 //* SERVER
 app.listen(port, () => {
