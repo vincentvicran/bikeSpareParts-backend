@@ -2,6 +2,9 @@ const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 
+const AppError = require('./helpers/appError');
+const globalErrorHandler = require('./controllers/errorController');
+
 const app = express();
 
 //* IMPORTING ENVIRONMENT VARIABLES
@@ -27,6 +30,13 @@ app.use(`/users`, userRoutes);
 // app.use(`/orders`, orderRoutes);
 // app.use(`/reviews`, reviewRoutes);
 // app.use(`/admin`, adminRoutes);
+
+//! GLOBAL ERROR HANDLING
+app.use('*', (res, req, next) => {
+    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+});
+
+app.use(globalErrorHandler);
 
 //* DATABASE CONNECTION
 mongoose
