@@ -56,6 +56,8 @@ const userSchema = mongoose.Schema(
 
         passwordResetExpiry: Date,
 
+        passwordChangedAt: Date,
+
         role: {
             type: String,
             required: true,
@@ -78,6 +80,30 @@ userSchema.pre('save', async function (next) {
 });
 
 //* AFTER CHANGING THE PASSWORD
+userSchema.pre('save', async function (next) {
+    //* THIS FUNCTION RUNS IF PASSWORD IS NOT MODIFIED, OR FOR NEW DOCUMENT
+    if (!this.isModified('password') || this.isNew) return next();
+
+    this.passwordChangedAt = Date.now() - 1000;
+
+    next();
+});
+
+//* CHECKING IF THE PASSWORD WAS MODIFIED AFTER USER LOG IN IN THE SAME SESSION
+userSchema.methods.changedPasswordAfter = function (JWTTimeStamp) {
+    if (this.passwordChangedAt) {
+        const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+        return JWTTimeStamp < changedTimestamp;
+    }
+
+    //? FALSE MEANS, NOT MODIFIED
+    return false;
+};
+
+//* CHECKING CURRENT USER PASSWORD WITH THE PASSWORD ENTERED
+userSchema.methods.correctPassword = async function (candidatePassword, password) {
+    return await bcrypt.compareSync(candidatePassword, password);
+};
 
 //* CREATING THE PASSWORD RESET TOKEN
 userSchema.methods.createPasswordResetToken = function () {

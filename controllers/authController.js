@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
+const crypto = require('crypto');
 
 const User = require('../models/userModel');
 
@@ -98,7 +99,7 @@ exports.protect = catchAsync(async (req, res, next) => {
         return next(new AppError('The user with this token no longer exists!', 401));
     }
 
-    // //? 4. CHECK IF USER MODIFIED THE PASSWORD AFTER THE TOKEN WAS ISSUED
+    //? 4. CHECK IF USER MODIFIED THE PASSWORD AFTER THE TOKEN WAS ISSUED
     if (freshUser.changedPasswordAfter(decoded.iat)) {
         return next(new AppError('User recently changed password! Please log in again!', 401));
     }
@@ -132,7 +133,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
 
-    const message = `Forgot your password? Submit this token with your new password to: \n${resetToken}\nIf you didn't forget your password, please ignore this email!`;
+    const message = `Forgot your password? Submit this token with your new password: \n${resetToken}\n\nIf you didn't forget your password, please ignore this email!`;
 
     try {
         await sendEmail({
@@ -154,3 +155,59 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
         return next(new AppError('There was an error sending the email! Please try again later!', 500));
     }
 });
+
+exports.resetPassword = catchAsync(async (req, res, next) => {
+    //* 1. GETTING THE USER BASED ON THE TOKEN
+    const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+    const user = await User.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetExpiry: { $gt: Date.now() },
+    });
+
+    //* 2. IF TOKEN HAS NOT EXPIRED, AND THERE IS AN EXISTING USER, SET THE NEW PASSWORD
+    if (!user) {
+        return next(new AppError('Token is invalid or has expired!', 400));
+    }
+
+    user.password = req.body.password;
+    // user.passwordConfirm = req.body.passwordConfirm;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpiry = undefined;
+    await user.save();
+
+    //* 3. UPDATING THE THE PROPERTY passwordChangedAt for the user
+    //! DONE IN userModel.JS
+
+    //* 4. LOGGING THE USER IN, SENDING JWT TOKEN
+    createSendToken(user, 200, res);
+});
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+    //* 1. FINDING THE USER FROM THE COLLECTION
+    const user = await User.findById(req.user.id).select('+password');
+
+    //* 2. CHECKINF IF ENTERED PASSWORD IS MATCHING TO THE COLLECTION
+    if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
+        return next(new AppError('Your current password is wrong!', 401));
+    }
+
+    //* 3. IF SO, UPDATING PASSWORD
+    user.password = req.body.password;
+    await user.save();
+
+    //* 4. LOGGING THE USER IN, AND SENDING THE JWT
+    createSendToken(user, 200, res);
+});
+
+exports.logout = (req, res) => {
+    res.cookie('jwt', 'loggedout', {
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true,
+    });
+
+    res.status(200).json({
+        status: 'success',
+        message: 'User successfully logged out!',
+    });
+};
