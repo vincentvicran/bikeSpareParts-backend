@@ -1,8 +1,11 @@
 const jwt = require('jsonwebtoken');
+const { promisify } = require('util');
 
 const User = require('../models/userModel');
+
 const catchAsync = require('../helpers/catchAsync');
 const AppError = require('../helpers/appError');
+const sendEmail = require('../helpers/email');
 
 //* GENERATE THE SIGNED TOKEN
 const signToken = (id) =>
@@ -71,4 +74,83 @@ exports.login = catchAsync(async (req, res, next) => {
 
     //* IF EVERYTHING IS OK, SEND TOKEN TO THE CLIENT
     createSendToken(user, 200, res);
+});
+
+exports.protect = catchAsync(async (req, res, next) => {
+    //? 1. GETTING TOKEN AND CHECK IF IT'S THERE
+    let token;
+
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        token = req.headers.authorization.split(' ')[1];
+    }
+
+    if (!token) {
+        return next(new AppError('You are not logged in! Please log in to gain access!', 401));
+    }
+
+    //? 2. VERIFYING THE TOKEN
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+    //? 3. CHECK IF USER STILL EXISTS
+    const freshUser = await User.findById(decoded.id);
+
+    if (!freshUser) {
+        return next(new AppError('The user with this token no longer exists!', 401));
+    }
+
+    // //? 4. CHECK IF USER MODIFIED THE PASSWORD AFTER THE TOKEN WAS ISSUED
+    if (freshUser.changedPasswordAfter(decoded.iat)) {
+        return next(new AppError('User recently changed password! Please log in again!', 401));
+    }
+
+    //* FINALLY GRANT ACCESS TO THE PROTECTED USER
+    req.user = freshUser;
+    next();
+});
+
+exports.allowedTo =
+    (...roles) =>
+    (req, res, next) => {
+        //* ROLES ['ADMIN', 'USER']
+        if (!roles.includes(req.user.role)) {
+            return next(new AppError('You are not allowed!', 403));
+        }
+        next();
+    };
+
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+    //? 1. FIND THE USER BASED ON THE ENTERED (POSTED) EMAIL
+    const user = await User.findOne({
+        email: req.body.email,
+    });
+
+    if (!user) {
+        return next(new AppError('There is no user with the given email address!', 404));
+    }
+
+    //? 2. GENERATE THE RANDOM RESET TOKEN
+    const resetToken = user.createPasswordResetToken();
+    await user.save({ validateBeforeSave: false });
+
+    const message = `Forgot your password? Submit this token with your new password to: \n${resetToken}\nIf you didn't forget your password, please ignore this email!`;
+
+    try {
+        await sendEmail({
+            email: user.email,
+            subject: 'Your password reset token (valid for 10 min)!',
+            message,
+        });
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Token sent to your Email!',
+        });
+    } catch (err) {
+        user.passwordResetToken = undefined;
+        user.passwordResetExpiry = undefined;
+
+        await user.save({ validateBeforeSave: false });
+
+        return next(new AppError('There was an error sending the email! Please try again later!', 500));
+    }
 });

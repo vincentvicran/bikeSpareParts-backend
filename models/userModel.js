@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const userSchema = mongoose.Schema(
     {
@@ -51,6 +52,10 @@ const userSchema = mongoose.Schema(
         //     },
         // },
 
+        passwordResetToken: String,
+
+        passwordResetExpiry: Date,
+
         role: {
             type: String,
             required: true,
@@ -71,6 +76,19 @@ userSchema.pre('save', async function (next) {
 
     next();
 });
+
+//* AFTER CHANGING THE PASSWORD
+
+//* CREATING THE PASSWORD RESET TOKEN
+userSchema.methods.createPasswordResetToken = function () {
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    this.passwordResetExpiry = Date.now() + 10 * 60 * 1000;
+
+    return resetToken;
+};
 
 //* CHECKING EITHER THE LOGGED IN PASSWORD IS CORRECT OR NOT
 userSchema.methods.correctPassword = async function (candidatePassword, password) {
