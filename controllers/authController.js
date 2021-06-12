@@ -59,7 +59,7 @@ exports.register = catchAsync(async (req, res, next) => {
 });
 
 exports.addAdmin = catchAsync(async (req, res, next) => {
-    const user = await User.create({
+    const admin = await User.create({
         name: req.body.name,
         email: req.body.email,
         dob: req.body.dob,
@@ -70,9 +70,14 @@ exports.addAdmin = catchAsync(async (req, res, next) => {
         role: 'admin',
     });
 
-    if (!user) next(new AppError('The admin could not be created!', 404));
+    if (!admin) next(new AppError('The admin could not be created!', 404));
 
-    createSendToken(user, 201, res);
+    // createSendToken(admin, 201, res);
+    res.status(201).json({
+        status: 'success',
+        message: 'The admin is added!',
+        data: admin,
+    });
 });
 
 exports.login = catchAsync(async (req, res, next) => {
