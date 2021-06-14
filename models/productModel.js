@@ -41,11 +41,6 @@ const productSchema = mongoose.Schema(
 
         color: String,
 
-        numReviews: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Review',
-        },
-
         isAvailable: {
             type: Boolean,
             default: true,

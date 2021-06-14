@@ -82,7 +82,7 @@ exports.deleteUserOrder = catchAsync(async (req, res, next) => {
     res.status(200).json({
         status: 'success',
         message: 'Your order has been deleted!',
-        data: order,
+        data: null,
     });
 });
 

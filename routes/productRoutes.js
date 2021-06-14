@@ -16,7 +16,12 @@ router.use(`/:productId/orders`, orderRoutes);
 // router.unsubscribe(`/:productId/reviews`, reviewRoutes);
 
 router.use(authController.allowedTo('admin'));
-router.route('/').post(productController.createProduct);
-router.route(`/:id`).patch(productController.updateProduct).delete(productController.deleteProduct);
+router
+    .route('/')
+    .post(productController.uploadProductPhoto, productController.resizeProductPhoto, productController.createProduct);
+router
+    .route(`/:id`)
+    .patch(productController.uploadProductPhoto, productController.resizeProductPhoto, productController.updateProduct)
+    .delete(productController.deleteProduct);
 
 module.exports = router;
