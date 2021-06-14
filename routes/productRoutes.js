@@ -13,7 +13,7 @@ router.route(`/:id`).get(productController.getOneProduct);
 
 router.use(authController.protect);
 router.use(`/:productId/orders`, orderRoutes);
-// router.unsubscribe(`/:productId/reviews`, reviewRoutes);
+// router.use(`/:productId/reviews`, reviewRoutes);
 
 router.use(authController.allowedTo('admin'));
 router

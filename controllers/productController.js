@@ -8,16 +8,6 @@ const Product = require('../models/productModel');
 
 const factory = require('./handlerFactory');
 
-// const multerStorage = multer.diskStorage({
-//     destination: (req, file, cb) => {
-//         cb(null, `public/img/products`);
-//     },
-//     filename: (req, file, cb) => {
-//         const ext = file.mimetype.split('/')[1];
-//         cb(null, `product-${req.user.id}-${Date.now()}.${ext}`);
-//     },
-// });
-
 const multerStorage = multer.memoryStorage();
 
 const multerFilter = (req, file, cb) => {
@@ -33,18 +23,28 @@ const upload = multer({
     fileFilter: multerFilter,
 });
 
-exports.uploadProductPhoto = upload.single('photo');
+exports.uploadProductPhoto = upload.array('images', 3);
 
 exports.resizeProductPhoto = catchAsync(async (req, res, next) => {
-    if (!req.file) return next();
+    if (!req.files) return next();
 
-    req.file.filename = `product-${req.user.id}-${Date.now()}.jpeg`;
+    console.table(req.files);
 
-    sharp(req.file.buffer)
-        .resize(800, 640)
-        .toFormat('jpeg')
-        .jpeg({ quality: 90 })
-        .toFile(`public/img/products/${req.file.filename}`);
+    req.body.images = [];
+
+    await Promise.all(
+        req.files.map(async (file, i) => {
+            const filename = `product-${req.body.name}-${Date.now()}-${i + 1}.jpeg`;
+
+            await sharp(file.buffer)
+                .resize(800, 640)
+                .toFormat('jpeg')
+                .jpeg({ quality: 90 })
+                .toFile(`public/img/products/${filename}`);
+
+            req.body.images.push(filename);
+        })
+    );
 
     next();
 });
@@ -53,22 +53,7 @@ exports.getAllProducts = factory.getAll(Product);
 
 exports.getOneProduct = factory.getOne(Product);
 
-// exports.createProduct = factory.createOne(Product);
-
-exports.createProduct = catchAsync(async (req, res, next) => {
-    const product = await Product.create({
-        name: req.body.name,
-        description: req.body.description,
-        images:,
-        category: req.body.category,
-        price: req.body.price,
-        brand: req.body.brand,
-        vehicle: req.body.vehicle,
-        review: req.body.review,
-        color: req.body.color,
-        isAvailable: req.body.isAvailable
-    })
-});
+exports.createProduct = factory.createOne(Product);
 
 exports.updateProduct = factory.updateOne(Product);
 

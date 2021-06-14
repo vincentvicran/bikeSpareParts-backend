@@ -14,6 +14,7 @@ router
     .delete(orderController.deleteUserOrder);
 
 router.use(authController.allowedTo('admin'));
+router.route(`/`).get(orderController.getAllOrders).post(orderController.createOrder);
 router
     .route(`/:id`)
     .get(orderController.getUserOrder)
