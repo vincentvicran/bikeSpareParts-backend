@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+const Product = require('./productModel');
+
 const orderSchema = mongoose.Schema(
     {
         buyer: {
@@ -40,7 +42,17 @@ const orderSchema = mongoose.Schema(
     { timestamps: true }
 );
 
-// orderSchema.pre('save', async function (next) {});
+orderSchema.pre('save', async function (next) {
+    const product = await Product.findById(this.product);
+
+    this.totalPrice = this.quantity * product.price;
+});
+
+// orderSchema.methods.getTotalPrice = async function (next) {
+//     const product = await Product.findById(this.product);
+
+//     return (totalPrice = this.quantity * product.price);
+// };
 
 const Order = mongoose.model('Order', orderSchema);
 module.exports = Order;

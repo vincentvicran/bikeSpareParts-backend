@@ -6,8 +6,22 @@ const factory = require('./handlerFactory');
 
 exports.getAllOrders = factory.getAll(Order);
 
+exports.getAllUserOrders = catchAsync(async (req, res, next) => {
+    const order = await Order.findById({ buyer: req.user.id });
+
+    if (!order) {
+        return next(new AppError('There is no order with the given ID!', 400));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Your orders have been found!',
+        data: order,
+    });
+});
+
 exports.getUserOrder = catchAsync(async (req, res, next) => {
-    const order = await Order.findById({ buyer: req.user.id }, req.params.id);
+    const order = await Order.findById({ buyer: req.user.id } && req.params.id);
 
     if (!order) {
         return next(new AppError('There is no order with the given ID!', 400));
@@ -28,6 +42,7 @@ exports.createOrder = catchAsync(async (req, res, next) => {
         product: req.params.productId,
         quantity: req.body.quantity,
         deliveryAddress: req.body.deliveryAddress,
+        totalPrice: req.body.totalPrice,
     });
 
     if (!order) return next(new AppError('Your order could not be issued! Please try again!', 400));
@@ -58,7 +73,7 @@ exports.updateUserOrder = catchAsync(async (req, res, next) => {
 exports.updateOrder = factory.updateOne(Order);
 
 exports.deleteUserOrder = catchAsync(async (req, res, next) => {
-    const order = await Order.findByIdAndDelete({ buyer: req.user.id }, req.params.id);
+    const order = await Order.findByIdAndDelete({ buyer: req.user.id } && req.params.id);
 
     if (!order) {
         return next(new AppError('There is no order with the given ID!', 400));

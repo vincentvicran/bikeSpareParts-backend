@@ -6,7 +6,7 @@ const authController = require('../controllers/authController');
 const orderController = require('../controllers/orderController');
 
 router.use(authController.protect);
-router.route('/').post(orderController.createOrder);
+router.route('/').get(orderController.getAllUserOrders).post(orderController.createOrder);
 router
     .route(`/:id`)
     .get(orderController.getUserOrder)
