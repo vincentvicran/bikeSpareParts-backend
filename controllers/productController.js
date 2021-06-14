@@ -26,9 +26,7 @@ const upload = multer({
 exports.uploadProductPhoto = upload.array('images', 3);
 
 exports.resizeProductPhoto = catchAsync(async (req, res, next) => {
-    if (!req.files) return next();
-
-    console.table(req.files);
+    if (!req.files) return next(new AppError('No files detected! Please insert an image!'));
 
     req.body.images = [];
 
