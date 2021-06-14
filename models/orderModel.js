@@ -34,11 +34,13 @@ const orderSchema = mongoose.Schema(
 
         totalPrice: {
             type: Number,
-            required: true,
+            // required: true,
         },
     },
     { timestamps: true }
 );
 
-const Order = mongoose.Schema('Order', orderSchema);
+// orderSchema.pre('save', async function (next) {});
+
+const Order = mongoose.model('Order', orderSchema);
 module.exports = Order;

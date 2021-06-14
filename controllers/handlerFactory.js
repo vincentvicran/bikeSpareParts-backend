@@ -3,11 +3,11 @@ const AppError = require('../helpers/appError');
 
 exports.getAll = (Model, popOptions) =>
     catchAsync(async (req, res, next) => {
-        let query = Model.find();
+        let resultQuery = Model.find(req.query);
 
-        if (popOptions) query = query.populate(popOptions);
+        if (popOptions) resultQuery = resultQuery.populate(popOptions);
 
-        const doc = await query;
+        const doc = await resultQuery;
 
         if (!doc) return next(new AppError('The requested document could not be found!', 404));
 
@@ -21,11 +21,11 @@ exports.getAll = (Model, popOptions) =>
 
 exports.getOne = (Model, popOptions) =>
     catchAsync(async (req, res, next) => {
-        let query = Model.findById(req.params.id);
+        let resultQuery = Model.findById(req.params.id, req.query);
 
-        if (popOptions) query = query.populate(popOptions);
+        if (popOptions) resultQuery = resultQuery.populate(popOptions);
 
-        const doc = await query;
+        const doc = await resultQuery;
 
         if (!doc) return next(new AppError('The requested document could not be found!', 404));
 

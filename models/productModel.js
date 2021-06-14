@@ -4,7 +4,7 @@ const productSchema = mongoose.Schema(
     {
         name: {
             type: String,
-            required: true,
+            required: [true, 'Please insert the name of the product!'],
         },
 
         description: {
@@ -12,7 +12,7 @@ const productSchema = mongoose.Schema(
             max: 100,
         },
 
-        image: [
+        images: [
             {
                 type: String,
             },
@@ -20,18 +20,18 @@ const productSchema = mongoose.Schema(
 
         category: {
             type: String,
+            required: [true, 'Please insert the category of the product!'],
         },
 
         price: {
             type: Number,
-            required: true,
+            required: [true, 'Please insert the price of the product!'],
         },
 
         brand: String,
 
         vehicle: {
             type: String,
-            required: true,
         },
 
         review: {
@@ -48,11 +48,12 @@ const productSchema = mongoose.Schema(
 
         isAvailable: {
             type: Boolean,
-            default: false,
+            default: true,
+            required: true,
         },
     },
     { timestapms: true }
 );
 
-const Product = mongoose.Schema('Product', productSchema);
+const Product = mongoose.model('Product', productSchema);
 module.exports = Product;
