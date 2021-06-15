@@ -55,9 +55,15 @@ exports.createOrder = catchAsync(async (req, res, next) => {
 });
 
 exports.updateUserOrder = catchAsync(async (req, res, next) => {
-    let order = await Order.find({ buyer: req.user.id });
+    const testOrder = await Order.findById(req.params.id);
+    const productId = testOrder.product._id;
+    req.body.totalPrice = await testOrder.getTotalPrice(productId);
 
-    order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const order = await Order.findByIdAndUpdate({ buyer: req.user.id } && req.params.id, req.body, {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+    });
 
     // const order = await userOrder.findByIdAndUpdate(req.params.id, req.body);
 

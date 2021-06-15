@@ -50,7 +50,11 @@ exports.createUserReview = catchAsync(async (req, res, next) => {
 });
 
 exports.updateUserReview = catchAsync(async (req, res, next) => {
-    const review = await Review.findOneAndUpdate({ reviewer: req.user.id } && req.params.id, req.body);
+    const review = await Review.findByIdAndUpdate({ reviewer: req.user.id } && req.params.id, req.body, {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+    });
 
     // const review = await userReview.findByIdAndUpdate(req.params.id, req.body);
 

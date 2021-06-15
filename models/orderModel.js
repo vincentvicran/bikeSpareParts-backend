@@ -48,6 +48,14 @@ orderSchema.pre('save', async function (next) {
     this.totalPrice = this.quantity * product.price;
 });
 
+orderSchema.methods.getTotalPrice = async function (productId, next) {
+    const product = await Product.findById(productId);
+
+    this.totalPrice = this.quantity * product.price;
+    // console.table([this.quantity, this.totalPrice]);
+    return this.totalPrice;
+};
+
 //* POPULATE OPTIONS
 orderSchema.pre(/^find/, async function (next) {
     this.populate({
