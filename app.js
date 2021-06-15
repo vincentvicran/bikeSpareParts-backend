@@ -22,13 +22,13 @@ app.use(express.json());
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
-// const reviewRoutes = require('./routes/reviewRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
 app.use(`/users`, userRoutes);
 app.use(`/products`, productRoutes);
 app.use(`/orders`, orderRoutes);
-// app.use(`/reviews`, reviewRoutes);
+app.use(`/reviews`, reviewRoutes);
 app.use(`/admin`, adminRoutes);
 
 //! GLOBAL ERROR HANDLING

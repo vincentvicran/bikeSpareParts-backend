@@ -48,5 +48,16 @@ orderSchema.pre('save', async function (next) {
     this.totalPrice = this.quantity * product.price;
 });
 
+orderSchema.pre(/^find/, function (next) {
+    this.populate({
+        path: 'product',
+        select: 'name',
+    }).populate({
+        path: 'buyer',
+        select: 'name',
+    });
+    next();
+});
+
 const Order = mongoose.model('Order', orderSchema);
 module.exports = Order;

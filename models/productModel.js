@@ -34,10 +34,12 @@ const productSchema = mongoose.Schema(
             type: String,
         },
 
-        review: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Review',
-        },
+        // reviews: [
+        //     {
+        //         type: mongoose.Schema.Types.ObjectId,
+        //         ref: 'Review',
+        //     },
+        // ],
 
         color: String,
 
@@ -49,6 +51,13 @@ const productSchema = mongoose.Schema(
     },
     { timestapms: true }
 );
+
+//* VIRTUALLY POPULATING REVIEWS
+productSchema.virtual('reviews', {
+    ref: 'Review',
+    foreignField: 'product',
+    localField: '_id',
+});
 
 const Product = mongoose.model('Product', productSchema);
 module.exports = Product;

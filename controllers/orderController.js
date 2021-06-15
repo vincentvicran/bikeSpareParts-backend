@@ -55,7 +55,7 @@ exports.createOrder = catchAsync(async (req, res, next) => {
 });
 
 exports.updateUserOrder = catchAsync(async (req, res, next) => {
-    const order = await Order.findOneAndUpdate({ buyer: req.user.id } && req.params.id);
+    const order = await Order.findOneAndUpdate({ buyer: req.user.id } && req.params.id, req.body);
 
     // const order = await userOrder.findByIdAndUpdate(req.params.id, req.body);
 
