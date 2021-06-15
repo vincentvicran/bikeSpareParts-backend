@@ -1,6 +1,7 @@
 const AppError = require('../helpers/appError');
 const catchAsync = require('../helpers/catchAsync');
 const Order = require('../models/orderModel');
+const Product = require('../models/productModel');
 
 const factory = require('./handlerFactory');
 
@@ -57,8 +58,8 @@ exports.createOrder = catchAsync(async (req, res, next) => {
 
 exports.updateUserOrder = catchAsync(async (req, res, next) => {
     const testOrder = await Order.findById(req.params.id);
-    const productId = testOrder.product._id;
-    req.body.totalPrice = await testOrder.getTotalPrice(productId);
+    const product = await Product.findById(testOrder.product._id);
+    req.body.totalPrice = req.body.quantity * product.price;
 
     const order = await Order.findByIdAndUpdate({ buyer: req.user.id } && req.params.id, req.body, {
         new: true,
