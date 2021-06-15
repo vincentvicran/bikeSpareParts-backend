@@ -48,7 +48,8 @@ orderSchema.pre('save', async function (next) {
     this.totalPrice = this.quantity * product.price;
 });
 
-orderSchema.pre(/^find/, function (next) {
+//* POPULATE OPTIONS
+orderSchema.pre(/^find/, async function (next) {
     this.populate({
         path: 'product',
         select: 'name',
