@@ -15,6 +15,7 @@ exports.getAllUserOrders = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
         status: 'success',
+        results: order.length,
         message: 'Your orders have been found!',
         data: order,
     });

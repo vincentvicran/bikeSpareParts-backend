@@ -13,6 +13,7 @@ exports.getAllUserReviews = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
         status: 'success',
+        results: review.length,
         message: 'Your reviews have been found!',
         data: review,
     });
