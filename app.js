@@ -1,11 +1,20 @@
 const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
 
 const AppError = require('./helpers/appError');
 const globalErrorHandler = require('./controllers/errorController');
 
 const app = express();
+
+//* CROSS ORIGIN HANDLING
+app.use(cors());
+app.options('*', cors());
 
 //* IMPORTING ENVIRONMENT VARIABLES
 require('dotenv/config');
@@ -13,10 +22,35 @@ require('dotenv/config');
 const port = process.env.PORT;
 
 //? MIDDLEWARE
-//* HTTP  request logger
-app.use(morgan('dev'));
 
+//* BODY PARSING INTO JSON
 app.use(express.json());
+
+//* set security HTTP headers00
+app.use(helmet());
+
+//* HTTP loggers details
+//? development logging
+if (process.env.NODE_ENV === 'development') {
+    app.use(morgan('dev'));
+}
+
+//* limiting request from same API
+const limiter = rateLimit({
+    max: 100,
+    windowMs: 60 * 60 * 1000,
+    message: 'Request limit reached! Please try again in an hour!',
+});
+app.use('/', limiter);
+
+//? serving static files
+app.use(express.static(`${__dirname}/public`));
+
+//? data sanitization against NoSQL query injection
+app.use(mongoSanitize());
+
+//? data sanitization against XSS
+app.use(xss());
 
 //? ROUTES HANDLING
 const userRoutes = require('./routes/userRoutes');

@@ -23,7 +23,7 @@ exports.getOne = (Model, popOptions) =>
     catchAsync(async (req, res, next) => {
         let resultQuery = Model.findById(req.params.id, req.query);
 
-        if (popOptions) resultQuery = resultQuery.populate(popOptions);
+        if (popOptions) resultQuery = resultQuery.populate('reviews');
 
         const doc = await resultQuery;
 
